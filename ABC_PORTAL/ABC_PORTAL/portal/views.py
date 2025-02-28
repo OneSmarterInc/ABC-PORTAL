@@ -69,6 +69,42 @@ def search_employee(request):
 
     return Response({"results": serializer.data})
 
+
+class GetClaimsDataView(APIView):
+    def get(self, request):
+        ssn = request.query_params.get("ssn")
+        if not ssn:
+            return Response({"error": "SSN is required"}, status=status.HTTP_400_BAD_REQUEST)
+        ssn = str(ssn).replace("-", "")
+        try:
+            ssn_int = int(ssn)
+        except ValueError:
+            return Response({"error": "Invalid SSN format"}, status=status.HTTP_400_BAD_REQUEST)
+
+        print(ssn_int)
+        df = fetch_claims_data_for_member_using_ssn(ssn_int)
+        data_dict = df.to_dict(orient="records")
+        return Response({"data": data_dict}, status=status.HTTP_200_OK)
+    
+
+class GetClaimsDataUsingClaimNoView(APIView):
+    def get(self, request):
+        clm = request.query_params.get("claim_no")
+        if not clm:
+            return Response({"error": "CLM NO is required"}, status=status.HTTP_400_BAD_REQUEST)
+        clm = str(clm)
+        df = fetch_claims_data_using_claim_no(clm)
+        data_dict = df.to_dict(orient="records")
+        return Response({"data": data_dict}, status=status.HTTP_200_OK)
+    
+    
+class GetTotalClaimsDataView(APIView):
+    def get(self, request):
+        df = fetch_claims_data_for_clmp()
+        df['FOR'] = ''
+        data_dict = df.to_dict(orient="records")
+        return Response({"data": data_dict}, status=status.HTTP_200_OK)
+
 class GetMemberCountView(APIView):
     def get(self, request):
         file_date = request.GET.get("file_date")
